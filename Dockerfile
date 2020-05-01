@@ -1,6 +1,6 @@
 FROM scratch
 
-COPY emptypage /
+COPY virtual-saemubox /
 
 COPY etc/passwd /etc/passwd
 
