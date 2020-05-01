@@ -1,0 +1,17 @@
+name: GolangCI-Lint
+
+on:
+  push:
+    branches-ignore:
+      - master
+      - gh-pages
+
+jobs:
+  golangci-lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Run GolangCI-Lint
+        uses: actions-contrib/golangci-lint@v1

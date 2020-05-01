@@ -33,6 +33,9 @@ func connectUDP(addr string) *net.UDPConn {
 	}
 
 	localAddr, err := net.ResolveUDPAddr("udp", ":0")
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	conn, err := net.DialUDP("udp", localAddr, udpAddr)
 	if err != nil {

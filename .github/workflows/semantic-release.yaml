@@ -1,0 +1,24 @@
+
+name: Run semantic-release
+
+on:
+  push:
+    branches:
+      - 'master'
+
+jobs:
+  semantic-release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Unshallow Clone
+        run: git fetch --prune --unshallow
+
+      - name: Run go-semantic-release
+        id: semrel
+        uses: go-semantic-release/action@v1.1.0
+        with:
+          github-token: ${{ secrets.GH_PAT_TOKEN }}
+          allow-initial-deployment-versions: true

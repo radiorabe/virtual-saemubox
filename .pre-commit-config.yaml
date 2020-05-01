@@ -1,0 +1,19 @@
+repos:
+  - repo: https://github.com/jorisroovers/gitlint
+    rev: v0.13.1
+    hooks:
+      - id: gitlint
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v2.5.0
+    hooks:
+      - id: trailing-whitespace
+        exclude: '^statik/statik.go$'
+      - id: end-of-file-fixer
+        exclude: '^statik/statik.go$'
+      - id: check-symlinks
+      - id: check-merge-conflict
+      - id: check-case-conflict
+      - id: detect-aws-credentials
+        args:
+          - --allow-missing-credentials
+      - id: detect-private-key
