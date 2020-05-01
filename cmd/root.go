@@ -63,7 +63,7 @@ func init() {
 
 	rootCmd.PersistentFlags().StringVar(&target, "target", "app:4001", "Target host:port")
 	rootCmd.PersistentFlags().StringVar(&pathfinder, "pathfinder", "pathfinder-01.service.int.rabe.ch:9600", "Pathfinder host:port")
-	rootCmd.PersistentFlags().StringVar(&device, "device", "Devices#0.WinDriver#[tcp://10.130.226.7:93].LwrpInterpreter#0.LwrpRoot#0.Gpi#1.GpioPinState#1 PinState", "Pathfinder endpoint to sub to")
+	rootCmd.PersistentFlags().StringVar(&device, "device", "Devices#0.PcpGpio#[tcp://127.0.0.1:93].LwrpInterpreter#0.LwrpRoot#0.Gpo#1.GpioPinState#1", "Pathfinder endpoint to sub to")
 	rootCmd.PersistentFlags().StringVar(&pathfinderAuth, "pathfinder-auth", "Admin Admin", "Pathfinder user pass")
 }
 

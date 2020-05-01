@@ -21,6 +21,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	"net"
 	"regexp"
+	"strings"
 	"time"
 )
 
@@ -83,15 +84,18 @@ func waitAndRead(pathfinder net.Conn, target *net.UDPConn) {
 		if err != nil {
 			log.Errorf("Error '%s'", err)
 		}
-		log.Infof("Received data '%s'", buffer)
+		trimmedData := strings.TrimRight(string(buffer), "\x00\r\n")
 
-		if pinIsLow.Match(buffer) {
+		log.Infof("Received data '%s'", trimmedData)
+
+		if pinIsLow.MatchString(trimmedData) {
 			// Klangbecken
 			TargetMessage = "1"
 		} else {
 			// Studio Live
 			TargetMessage = "6"
 		}
+		log.Infof("Target message is now '%s'", TargetMessage)
 	}
 }
 
