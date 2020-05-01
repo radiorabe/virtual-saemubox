@@ -159,12 +159,12 @@ func Execute(sendUDP bool, targetAddr string, pathfinderAddr string, pathfinderA
 	writeTCP(pathfinder, fmt.Sprintf("SUB %s", device))
 	writeTCP(pathfinder, fmt.Sprintf("GET %s", device))
 
-	if sendUDP {
-		for {
+	for {
+		if sendUDP {
 			if atomic.LoadInt32(&targetMessage) != 0 {
 				writeUDP(target, fmt.Sprintf("%d\r\n", atomic.LoadInt32(&targetMessage)))
 			}
-			time.Sleep(600 * time.Millisecond)
 		}
+		time.Sleep(600 * time.Millisecond)
 	}
 }
