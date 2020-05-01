@@ -22,10 +22,11 @@ import (
 	"net"
 	"regexp"
 	"strings"
+	"sync/atomic"
 	"time"
 )
 
-var TargetMessage string
+var targetMessage int32
 
 func connectUDP(addr string) *net.UDPConn {
 	udpAddr, err := net.ResolveUDPAddr("udp4", addr)
@@ -90,12 +91,12 @@ func waitAndRead(pathfinder net.Conn, target *net.UDPConn) {
 
 		if pinIsLow.MatchString(trimmedData) {
 			// Klangbecken
-			TargetMessage = "1"
+			atomic.StoreInt32(&targetMessage, 1)
 		} else {
 			// Studio Live
-			TargetMessage = "6"
+			atomic.StoreInt32(&targetMessage, 6)
 		}
-		log.Infof("Target message is now '%s'", TargetMessage)
+		log.Infof("Target message is now '%d'", atomic.LoadInt32(&targetMessage))
 	}
 }
 
@@ -113,8 +114,8 @@ func Execute(targetAddr string, pathfinderAddr string, pathfinderAuth string, de
 	writeTCP(pathfinder, fmt.Sprintf("GET %s", device))
 
 	for {
-		if TargetMessage != "" {
-			writeUDP(target, fmt.Sprintf("%s\r\n", TargetMessage))
+		if atomic.LoadInt32(&targetMessage) != 0 {
+			writeUDP(target, fmt.Sprintf("%d\r\n", atomic.LoadInt32(&targetMessage)))
 		}
 		time.Sleep(600 * time.Millisecond)
 	}
