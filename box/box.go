@@ -26,7 +26,12 @@ import (
 	"time"
 )
 
-var targetMessage int32
+var (
+	SocketActive  bool
+	Socket        net.Conn
+	SocketPattern string
+	targetMessage int32
+)
 
 func connectUDP(addr string) *net.UDPConn {
 	udpAddr, err := net.ResolveUDPAddr("udp4", addr)
@@ -54,6 +59,14 @@ func connectTCP(addr string) net.Conn {
 	return conn
 }
 
+func connectSocket(addr string) net.Conn {
+	conn, err := net.Dial("unix", addr)
+	if err != nil {
+		log.Fatal(err)
+	}
+	return conn
+}
+
 func writeUDP(conn *net.UDPConn, value string) {
 	log.Debugf("Writing to UDP connection '%s'", value)
 	_, err := fmt.Fprintf(conn, "%s\r\n", value)
@@ -67,6 +80,27 @@ func writeTCP(conn net.Conn, value string) {
 	_, err := fmt.Fprintf(conn, "%s\r\n", value)
 	if err != nil {
 		log.Error(err)
+	}
+}
+
+func writeSock(conn net.Conn, value string) {
+	log.Debugf("Writing to TCP connection: '%s'", value)
+	_, err := conn.Write([]byte(value))
+	if err != nil {
+		log.Error(err)
+	}
+}
+
+func onChange(klangbecken bool) {
+	onair := "False"
+	if klangbecken {
+		log.Info("Starting Klangbecken")
+		onair = "True"
+	} else {
+		log.Info("Stopping Klangbecken")
+	}
+	if SocketActive {
+		writeSock(Socket, fmt.Sprintf(SocketPattern, onair))
 	}
 }
 
@@ -89,18 +123,30 @@ func waitAndRead(pathfinder net.Conn, target *net.UDPConn) {
 
 		log.Infof("Received data '%s'", trimmedData)
 
+		if trimmedData == "login successful" {
+			continue
+		}
+
 		if pinIsLow.MatchString(trimmedData) {
 			// Klangbecken
 			atomic.StoreInt32(&targetMessage, 1)
+			onChange(true)
 		} else {
 			// Studio Live
 			atomic.StoreInt32(&targetMessage, 6)
+			onChange(false)
 		}
 		log.Infof("Target message is now '%d'", atomic.LoadInt32(&targetMessage))
 	}
 }
 
-func Execute(targetAddr string, pathfinderAddr string, pathfinderAuth string, device string) {
+func Execute(targetAddr string, pathfinderAddr string, pathfinderAuth string, device string, socket bool, socketPath string, socketPattern string) {
+
+	SocketActive = socket
+	if socket {
+		Socket = connectSocket(socketPath)
+		SocketPattern = socketPattern
+	}
 	log.Info("Connecting...")
 	target := connectUDP(targetAddr)
 	log.Infof("Connected to target %s", targetAddr)

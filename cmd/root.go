@@ -32,6 +32,9 @@ var target string
 var pathfinder string
 var pathfinderAuth string
 var device string
+var socket bool
+var socketPath string
+var socketPattern string
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
@@ -43,7 +46,7 @@ legacy UDP telnet format that quite a few of our legacy apps still expect.
 It is a stop-gap measure that helps us migrate to Pathfinder ASAP enabling us to
 refactor legacy apps at a later point.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		box.Execute(target, pathfinder, pathfinderAuth, device)
+		box.Execute(target, pathfinder, pathfinderAuth, device, socket, socketPath, socketPattern)
 	},
 }
 
@@ -65,6 +68,9 @@ func init() {
 	rootCmd.PersistentFlags().StringVar(&pathfinder, "pathfinder", "pathfinder-01.service.int.rabe.ch:9600", "Pathfinder host:port")
 	rootCmd.PersistentFlags().StringVar(&device, "device", "Devices#0.PcpGpio#[tcp://127.0.0.1:93].LwrpInterpreter#0.LwrpRoot#0.Gpo#1.GpioPinState#1", "Pathfinder endpoint to sub to")
 	rootCmd.PersistentFlags().StringVar(&pathfinderAuth, "pathfinder-auth", "Admin Admin", "Pathfinder user pass")
+	rootCmd.PersistentFlags().BoolVar(&socket, "socket", false, "Enable socket writing")
+	rootCmd.PersistentFlags().StringVar(&socketPath, "socket-path", "/var/run/klangbecken.sock", "Path to Klangbecken socket")
+	rootCmd.PersistentFlags().StringVar(&socketPattern, "socket-pattern", "klangbecken.onair %v", "Socket message format as fmt string")
 }
 
 // initConfig reads in config file and ENV variables if set.
