@@ -140,7 +140,7 @@ func waitAndRead(pathfinder net.Conn, target *net.UDPConn) {
 	}
 }
 
-func Execute(targetAddr string, pathfinderAddr string, pathfinderAuth string, device string, socket bool, socketPath string, socketPattern string) {
+func Execute(sendUDP bool, targetAddr string, pathfinderAddr string, pathfinderAuth string, device string, socket bool, socketPath string, socketPattern string) {
 
 	SocketActive = socket
 	if socket {
@@ -159,10 +159,12 @@ func Execute(targetAddr string, pathfinderAddr string, pathfinderAuth string, de
 	writeTCP(pathfinder, fmt.Sprintf("SUB %s", device))
 	writeTCP(pathfinder, fmt.Sprintf("GET %s", device))
 
-	for {
-		if atomic.LoadInt32(&targetMessage) != 0 {
-			writeUDP(target, fmt.Sprintf("%d\r\n", atomic.LoadInt32(&targetMessage)))
+	if sendUDP {
+		for {
+			if atomic.LoadInt32(&targetMessage) != 0 {
+				writeUDP(target, fmt.Sprintf("%d\r\n", atomic.LoadInt32(&targetMessage)))
+			}
+			time.Sleep(600 * time.Millisecond)
 		}
-		time.Sleep(600 * time.Millisecond)
 	}
 }

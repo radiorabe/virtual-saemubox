@@ -28,6 +28,7 @@ import (
 )
 
 var cfgFile string
+var sendUDP bool
 var target string
 var pathfinder string
 var pathfinderAuth string
@@ -46,7 +47,7 @@ legacy UDP telnet format that quite a few of our legacy apps still expect.
 It is a stop-gap measure that helps us migrate to Pathfinder ASAP enabling us to
 refactor legacy apps at a later point.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		box.Execute(target, pathfinder, pathfinderAuth, device, socket, socketPath, socketPattern)
+		box.Execute(sendUDP, target, pathfinder, pathfinderAuth, device, socket, socketPath, socketPattern)
 	},
 }
 
@@ -64,6 +65,7 @@ func init() {
 
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.virtual-saemubox.yaml)")
 
+	rootCmd.PersistentFlags().BoolVar(&sendUDP, "udp", true, "Send UDP packets with a sambubox id to target")
 	rootCmd.PersistentFlags().StringVar(&target, "target", "app:4001", "Target host:port")
 	rootCmd.PersistentFlags().StringVar(&pathfinder, "pathfinder", "pathfinder-01.service.int.rabe.ch:9600", "Pathfinder host:port")
 	rootCmd.PersistentFlags().StringVar(&device, "device", "Devices#0.PcpGpio#[tcp://127.0.0.1:93].LwrpInterpreter#0.LwrpRoot#0.Gpo#1.GpioPinState#1", "Pathfinder endpoint to sub to")
