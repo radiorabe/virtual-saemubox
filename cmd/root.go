@@ -72,7 +72,7 @@ func init() {
 	rootCmd.PersistentFlags().StringVar(&pathfinderAuth, "pathfinder-auth", "Admin Admin", "Pathfinder user pass")
 	rootCmd.PersistentFlags().BoolVar(&socket, "socket", false, "Enable socket writing")
 	rootCmd.PersistentFlags().StringVar(&socketPath, "socket-path", "/var/run/klangbecken.sock", "Path to Klangbecken socket")
-	rootCmd.PersistentFlags().StringVar(&socketPattern, "socket-pattern", "klangbecken.onair %v", "Socket message format as fmt string")
+	rootCmd.PersistentFlags().StringVar(&socketPattern, "socket-pattern", "klangbecken.onair %v\n", "Socket message format as fmt string")
 }
 
 // initConfig reads in config file and ENV variables if set.
