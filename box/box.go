@@ -17,6 +17,7 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 package box
 
 import (
+	"bufio"
 	"fmt"
 	log "github.com/sirupsen/logrus"
 	"net"
@@ -124,14 +125,14 @@ func onChange(klangbecken bool) {
 func waitAndRead(pathfinder net.Conn, target *net.UDPConn) {
 	log.Info("Waiting for Pathfinder data.")
 
-	buffer := make([]byte, 2048)
+	reader := bufio.NewReader(pathfinder)
 	pinIsLow := regexp.MustCompile(`PinState=[lL]`)
 
 	defer pathfinder.Close()
 
 	for {
 		log.Debug("Reading from Pathfinder.")
-		_, err := pathfinder.Read(buffer)
+		buffer, _, err := reader.ReadLine()
 		if err != nil {
 			log.Errorf("Error '%s'", err)
 		}
