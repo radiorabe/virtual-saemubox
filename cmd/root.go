@@ -76,7 +76,7 @@ func init() {
 	rootCmd.PersistentFlags().StringVar(&device, "device", "Devices#0.PcpGpio#[tcp://127.0.0.1:93].LwrpInterpreter#0.LwrpRoot#0.Gpo#1.GpioPinState#1", "Pathfinder endpoint to sub to")
 	rootCmd.PersistentFlags().StringVar(&pathfinderAuth, "pathfinder-auth", "Admin Admin", "Pathfinder user pass")
 	rootCmd.PersistentFlags().BoolVar(&socket, "socket", false, "Enable socket writing")
-	rootCmd.PersistentFlags().StringVar(&socketPath, "socket-path", "/var/run/klangbecken.sock", "Path to Klangbecken socket")
+	rootCmd.PersistentFlags().StringVar(&socketPath, "socket-path", "/var/run/liquidsoap/klangbecken.sock", "Path to Klangbecken socket")
 	rootCmd.PersistentFlags().StringVar(&socketPattern, "socket-pattern", "klangbecken.onair %v\n", "Socket message format as fmt string")
 	rootCmd.PersistentFlags().BoolVar(&debug, "debug", false, "Enable debug logs")
 }
