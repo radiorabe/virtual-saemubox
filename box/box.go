@@ -111,7 +111,6 @@ func waitAndRead(pathfinder net.Conn, target *net.UDPConn) {
 	pinIsLow := regexp.MustCompile(`PinState=[lL]`)
 
 	defer pathfinder.Close()
-	defer target.Close()
 
 	for {
 		log.Debug("Reading from Pathfinder.")
@@ -147,9 +146,13 @@ func Execute(sendUDP bool, targetAddr string, pathfinderAddr string, pathfinderA
 		Socket = connectSocket(socketPath)
 		SocketPattern = socketPattern
 	}
-	log.Info("Connecting...")
-	target := connectUDP(targetAddr)
-	log.Infof("Connected to target %s", targetAddr)
+	var target *net.UDPConn
+	if sendUDP {
+		log.Info("Connecting UDP...")
+		target = connectUDP(targetAddr)
+		log.Infof("Connected to target %s", targetAddr)
+		defer target.Close()
+	}
 	pathfinder := connectTCP(pathfinderAddr)
 	log.Infof("Connected to pathfinder %s", pathfinderAddr)
 
