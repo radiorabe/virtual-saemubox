@@ -29,6 +29,7 @@ import (
 var (
 	SocketActive  bool
 	Socket        net.Conn
+	SocketPath    string
 	SocketPattern string
 	targetMessage int32
 )
@@ -62,9 +63,20 @@ func connectTCP(addr string) net.Conn {
 func connectSocket(addr string) net.Conn {
 	conn, err := net.Dial("unix", addr)
 	if err != nil {
-		log.Fatal(err)
+		log.Error(err)
 	}
 	return conn
+}
+
+func reconnectSocket() {
+	log.Info("Reconnecting socket")
+	if Socket != nil {
+		Socket.Close()
+	}
+	Socket = connectSocket(SocketPath)
+	if Socket == nil {
+		log.Fatal("Failed to reconnect Socket, bailing out")
+	}
 }
 
 func writeUDP(conn *net.UDPConn, value string) {
@@ -84,10 +96,15 @@ func writeTCP(conn net.Conn, value string) {
 }
 
 func writeSock(conn net.Conn, value string) {
+	if conn == nil {
+		reconnectSocket()
+	}
 	log.Debugf("Writing to TCP connection: '%s'", value)
 	_, err := conn.Write([]byte(value))
 	if err != nil {
 		log.Error(err)
+		reconnectSocket()
+		writeSock(Socket, fmt.Sprintf(SocketPattern, value))
 	}
 }
 
@@ -143,8 +160,9 @@ func Execute(sendUDP bool, targetAddr string, pathfinderAddr string, pathfinderA
 
 	SocketActive = socket
 	if socket {
-		Socket = connectSocket(socketPath)
+		SocketPath = socketPath
 		SocketPattern = socketPattern
+		Socket = connectSocket(SocketPath)
 	}
 	var target *net.UDPConn
 	if sendUDP {
