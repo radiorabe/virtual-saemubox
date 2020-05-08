@@ -22,12 +22,14 @@ import (
 	"os"
 
 	homedir "github.com/mitchellh/go-homedir"
+	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 
 	"github.com/radiorabe/virtual-saemubox/box"
 )
 
 var cfgFile string
+var debug bool
 var sendUDP bool
 var target string
 var pathfinder string
@@ -47,6 +49,9 @@ legacy UDP telnet format that quite a few of our legacy apps still expect.
 It is a stop-gap measure that helps us migrate to Pathfinder ASAP enabling us to
 refactor legacy apps at a later point.`,
 	Run: func(cmd *cobra.Command, args []string) {
+		if debug {
+			log.SetLevel(log.DebugLevel)
+		}
 		box.Execute(sendUDP, target, pathfinder, pathfinderAuth, device, socket, socketPath, socketPattern)
 	},
 }
@@ -73,6 +78,7 @@ func init() {
 	rootCmd.PersistentFlags().BoolVar(&socket, "socket", false, "Enable socket writing")
 	rootCmd.PersistentFlags().StringVar(&socketPath, "socket-path", "/var/run/klangbecken.sock", "Path to Klangbecken socket")
 	rootCmd.PersistentFlags().StringVar(&socketPattern, "socket-pattern", "klangbecken.onair %v\n", "Socket message format as fmt string")
+	rootCmd.PersistentFlags().BoolVar(&debug, "debug", false, "Enable debug logs")
 }
 
 // initConfig reads in config file and ENV variables if set.
