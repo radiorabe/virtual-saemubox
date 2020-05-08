@@ -69,17 +69,6 @@ func connectSocket(addr string) net.Conn {
 	return conn
 }
 
-func reconnectSocket() {
-	log.Info("Reconnecting socket")
-	if Socket != nil {
-		Socket.Close()
-	}
-	Socket = connectSocket(SocketPath)
-	if Socket == nil {
-		log.Fatal("Failed to reconnect Socket, bailing out")
-	}
-}
-
 func writeUDP(conn *net.UDPConn, value string) {
 	log.Debugf("Writing to UDP connection '%s'", value)
 	_, err := fmt.Fprintf(conn, "%s\r\n", value)
@@ -97,15 +86,10 @@ func writeTCP(conn net.Conn, value string) {
 }
 
 func writeSock(conn net.Conn, value string) {
-	if conn == nil {
-		reconnectSocket()
-	}
 	log.Debugf("Writing to TCP connection: '%s'", value)
 	_, err := conn.Write([]byte(value))
 	if err != nil {
 		log.Error(err)
-		reconnectSocket()
-		writeSock(Socket, fmt.Sprintf(SocketPattern, value))
 	}
 }
 
@@ -118,7 +102,22 @@ func onChange(klangbecken bool) {
 		log.Info("Stopping Klangbecken")
 	}
 	if SocketActive {
-		writeSock(Socket, fmt.Sprintf(SocketPattern, onair))
+		socket := connectSocket(SocketPath)
+		reader := bufio.NewReader(socket)
+
+		writeSock(socket, fmt.Sprintf(SocketPattern, onair))
+		buffer, _, err := reader.ReadLine()
+		if err != nil {
+			log.Error(err)
+		}
+		log.Infof("Reponse from Liquidsoap '%s'", buffer)
+		writeSock(socket, fmt.Sprintf("quit\n"))
+		buffer, _, err = reader.ReadLine()
+		if err != nil {
+			log.Error(err)
+		}
+		log.Infof("Reponse from Liquidsoap '%s'", buffer)
+		socket.Close()
 	}
 }
 
@@ -160,11 +159,9 @@ func waitAndRead(pathfinder net.Conn, target *net.UDPConn) {
 func Execute(sendUDP bool, targetAddr string, pathfinderAddr string, pathfinderAuth string, device string, socket bool, socketPath string, socketPattern string) {
 
 	SocketActive = socket
-	if socket {
-		SocketPath = socketPath
-		SocketPattern = socketPattern
-		Socket = connectSocket(SocketPath)
-	}
+	SocketPath = socketPath
+	SocketPattern = socketPattern
+
 	var target *net.UDPConn
 	if sendUDP {
 		log.Info("Connecting UDP...")
