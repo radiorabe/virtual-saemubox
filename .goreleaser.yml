@@ -4,6 +4,10 @@ before:
 builds:
 - env:
   - CGO_ENABLED=0
+  ldflags:
+  - "-X 'github.com/radiorabe/virtual-saemubox/cmd.version={{ .Tag }}'"
+  - "-X 'github.com/radiorabe/virtual-saemubox/cmd.commit={{ .FullCommit }}'"
+  - "-X 'github.com/radiorabe/virtual-saemubox/cmd.date={{.Date}}'"
 archives:
 - replacements:
     darwin: Darwin
