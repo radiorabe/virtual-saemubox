@@ -27,15 +27,15 @@ changelog:
     - '^test:'
 dockers:
   - image_templates:
-      - "docker.pkg.github.com/radiorabe/virtual-saemubox/virtual-saemubox:{{ .Tag }}"
-      - "docker.pkg.github.com/radiorabe/virtual-saemubox/virtual-saemubox:v{{ .Major }}"
-      - "docker.pkg.github.com/radiorabe/virtual-saemubox/virtual-saemubox:v{{ .Major }}.{{ .Minor }}"
-      - "docker.pkg.github.com/radiorabe/virtual-saemubox/virtual-saemubox:latest"
+      - "ghcr.io/radiorabe/virtual-saemubox:{{ .Tag }}"
+      - "ghcr.io/radiorabe/virtual-saemubox:v{{ .Major }}"
+      - "ghcr.io/radiorabe/virtual-saemubox:v{{ .Major }}.{{ .Minor }}"
+      - "ghcr.io/radiorabe/virtual-saemubox:latest"
     build_flag_templates:
       - "--label=org.opencontainers.image.created={{.Date}}"
       - "--label=org.opencontainers.image.name={{.ProjectName}}"
       - "--label=org.opencontainers.image.revision={{.FullCommit}}"
       - "--label=org.opencontainers.image.version={{.Version}}"
-      - "--label=org.opencontainers.image.source={{.GitURL}}"
+      - "--label=org.opencontainers.image.source=https://github.com/radiorabe/virtual-saemubox"
     extra_files:
       - etc/passwd
