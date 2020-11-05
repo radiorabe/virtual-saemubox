@@ -1,4 +1,6 @@
 /*
+Package box contains the network and business logic of virtual-säemubox.
+
 Copyright © 2020 Radio Bern RaBe - Lucas Bickel <hairmare@rabe.ch>
 
 This program is free software: you can redistribute it and/or modify
@@ -19,19 +21,19 @@ package box
 import (
 	"bufio"
 	"fmt"
-	log "github.com/sirupsen/logrus"
 	"net"
 	"regexp"
 	"strings"
 	"sync/atomic"
 	"time"
+
+	log "github.com/sirupsen/logrus"
 )
 
 var (
-	SocketActive  bool
-	Socket        net.Conn
-	SocketPath    string
-	SocketPattern string
+	socketActive  bool
+	socketPath    string
+	socketPattern string
 	targetMessage int32
 )
 
@@ -101,11 +103,11 @@ func onChange(klangbecken bool) {
 	} else {
 		log.Info("Stopping Klangbecken")
 	}
-	if SocketActive {
-		socket := connectSocket(SocketPath)
+	if socketActive {
+		socket := connectSocket(socketPath)
 		reader := bufio.NewReader(socket)
 
-		writeSock(socket, fmt.Sprintf(SocketPattern, onair))
+		writeSock(socket, fmt.Sprintf(socketPattern, onair))
 		buffer, _, err := reader.ReadLine()
 		if err != nil {
 			log.Error(err)
@@ -156,11 +158,12 @@ func waitAndRead(pathfinder net.Conn, target *net.UDPConn) {
 	}
 }
 
-func Execute(sendUDP bool, targetAddr string, pathfinderAddr string, pathfinderAuth string, device string, socket bool, socketPath string, socketPattern string) {
+// Execute initializes virtual-sämbox and runs is business logic.
+func Execute(sendUDP bool, targetAddr string, pathfinderAddr string, pathfinderAuth string, device string, socket bool, socketPathOpt string, socketPatternOpt string) {
 
-	SocketActive = socket
-	SocketPath = socketPath
-	SocketPattern = socketPattern
+	socketActive = socket
+	socketPath = socketPathOpt
+	socketPattern = socketPatternOpt
 
 	var target *net.UDPConn
 	if sendUDP {
