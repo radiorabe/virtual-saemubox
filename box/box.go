@@ -135,14 +135,17 @@ func waitAndRead(pathfinder net.Conn, target *net.UDPConn) {
 		log.Debug("Reading from Pathfinder.")
 		buffer, _, err := reader.ReadLine()
 		if err != nil {
-			log.Errorf("Error '%s'", err)
+			log.WithError(err).Fatal("Failed to read from Pathfinder.")
 		}
 		trimmedData := strings.TrimRight(string(buffer), "\x00\r\n")
 
 		log.Infof("Received data '%s'", trimmedData)
 
-		if trimmedData == "login successful" {
+		switch trimmedData {
+		case "login successful":
 			continue
+		case "login failed":
+			log.Fatal("Failed to login to Pathfinder.")
 		}
 
 		if pinIsLow.MatchString(trimmedData) {
