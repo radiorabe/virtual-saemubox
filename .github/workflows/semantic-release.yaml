@@ -4,7 +4,8 @@ name: Run semantic-release
 on:
   push:
     branches:
-      - 'master'
+      - master
+      - main
 
 jobs:
   semantic-release:
