@@ -113,7 +113,7 @@ func onChange(klangbecken bool) {
 			log.Error(err)
 		}
 		log.Infof("Response from Liquidsoap '%s'", buffer)
-		writeSock(socket, fmt.Sprintf("quit\n"))
+		writeSock(socket, "quit\n")
 		buffer, _, err = reader.ReadLine()
 		if err != nil {
 			log.Error(err)
