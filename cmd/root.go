@@ -77,7 +77,7 @@ func init() {
 	rootCmd.PersistentFlags().StringVar(&pathfinderAuth, "pathfinder-auth", "Admin Admin", "Pathfinder user pass")
 	rootCmd.PersistentFlags().BoolVar(&socket, "socket", false, "Enable socket writing")
 	rootCmd.PersistentFlags().StringVar(&socketPath, "socket-path", "/var/run/liquidsoap/klangbecken.sock", "Path to Klangbecken socket")
-	rootCmd.PersistentFlags().StringVar(&socketPattern, "socket-pattern", "klangbecken.onair %v\n", "Socket message format as fmt string")
+	rootCmd.PersistentFlags().StringVar(&socketPattern, "socket-pattern", "klangbecken.on_air %v\n", "Socket message format as fmt string")
 	rootCmd.PersistentFlags().BoolVar(&debug, "debug", false, "Enable debug logs")
 }
 
