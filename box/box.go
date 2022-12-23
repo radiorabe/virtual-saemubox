@@ -127,7 +127,6 @@ func waitAndRead(pathfinder net.Conn, target *net.UDPConn) {
 	log.Info("Waiting for Pathfinder data.")
 
 	reader := bufio.NewReader(pathfinder)
-	pinIsLow := regexp.MustCompile(`PinState=[lL]`)
 
 	defer pathfinder.Close()
 
@@ -137,28 +136,44 @@ func waitAndRead(pathfinder net.Conn, target *net.UDPConn) {
 		if err != nil {
 			log.WithError(err).Fatal("Failed to read from Pathfinder.")
 		}
-		trimmedData := strings.TrimRight(string(buffer), "\x00\r\n")
+		trimmedData := trimmedStringFromBuffer(buffer)
 
 		log.Infof("Received data '%s'", trimmedData)
 
-		switch trimmedData {
-		case "login successful":
+		target, onChangeVal, err := checkTrimmedData(trimmedData)
+		if err != nil {
+			log.Fatal(err)
+		}
+		if target == 0 {
 			continue
-		case "login failed":
-			log.Fatal("Failed to login to Pathfinder.")
 		}
+		atomic.StoreInt32(&targetMessage, target)
+		onChange(onChangeVal)
 
-		if pinIsLow.MatchString(trimmedData) {
-			// Klangbecken
-			atomic.StoreInt32(&targetMessage, 1)
-			onChange(true)
-		} else {
-			// Studio Live
-			atomic.StoreInt32(&targetMessage, 6)
-			onChange(false)
-		}
 		log.Infof("Target message is now '%d'", atomic.LoadInt32(&targetMessage))
 	}
+}
+
+func trimmedStringFromBuffer(buffer []byte) string {
+	return strings.TrimRight(string(buffer), "\x00\r\n")
+}
+
+func checkTrimmedData(trimmedData string) (target int32, onChange bool, err error) {
+	pinIsLow := regexp.MustCompile(`PinState=[lL]`)
+
+	switch trimmedData {
+	case "login successful":
+		return 0, false, nil
+	case "login failed":
+		return 0, false, fmt.Errorf("Failed to login to Pathfinder.")
+	}
+
+	if pinIsLow.MatchString(trimmedData) {
+		// Klangbecken
+		return 1, true, nil
+	}
+	// Studio Live
+	return 6, false, nil
 }
 
 // Execute initializes virtual-sämbox and runs is business logic.
