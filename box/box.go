@@ -27,7 +27,7 @@ import (
 	"sync/atomic"
 	"time"
 
-	log "github.com/sirupsen/logrus"
+	"go.uber.org/zap"
 )
 
 var (
@@ -37,7 +37,7 @@ var (
 	targetMessage int32
 )
 
-func connectUDP(addr string) *net.UDPConn {
+func connectUDP(log *zap.SugaredLogger, addr string) *net.UDPConn {
 	udpAddr, err := net.ResolveUDPAddr("udp4", addr)
 	if err != nil {
 		log.Fatal(err)
@@ -55,7 +55,7 @@ func connectUDP(addr string) *net.UDPConn {
 	return conn
 }
 
-func connectTCP(addr string) net.Conn {
+func connectTCP(log *zap.SugaredLogger, addr string) net.Conn {
 	conn, err := net.Dial("tcp", addr)
 	if err != nil {
 		log.Fatal(err)
@@ -63,7 +63,7 @@ func connectTCP(addr string) net.Conn {
 	return conn
 }
 
-func connectSocket(addr string) net.Conn {
+func connectSocket(log *zap.SugaredLogger, addr string) net.Conn {
 	conn, err := net.Dial("unix", addr)
 	if err != nil {
 		log.Error(err)
@@ -71,7 +71,7 @@ func connectSocket(addr string) net.Conn {
 	return conn
 }
 
-func writeUDP(conn *net.UDPConn, value string) {
+func writeUDP(log *zap.SugaredLogger, conn *net.UDPConn, value string) {
 	log.Debugf("Writing to UDP connection '%s'", value)
 	_, err := fmt.Fprintf(conn, "%s\r\n", value)
 	if err != nil {
@@ -79,7 +79,7 @@ func writeUDP(conn *net.UDPConn, value string) {
 	}
 }
 
-func writeTCP(conn net.Conn, value string) {
+func writeTCP(log *zap.SugaredLogger, conn net.Conn, value string) {
 	log.Debugf("Writing to TCP connection: '%s'", value)
 	_, err := fmt.Fprintf(conn, "%s\r\n", value)
 	if err != nil {
@@ -87,7 +87,7 @@ func writeTCP(conn net.Conn, value string) {
 	}
 }
 
-func writeSock(conn net.Conn, value string) {
+func writeSock(log *zap.SugaredLogger, conn net.Conn, value string) {
 	log.Debugf("Writing to TCP connection: '%s'", value)
 	_, err := conn.Write([]byte(value))
 	if err != nil {
@@ -95,7 +95,7 @@ func writeSock(conn net.Conn, value string) {
 	}
 }
 
-func onChange(klangbecken bool) {
+func onChange(log *zap.SugaredLogger, klangbecken bool) {
 	onair := "False"
 	if klangbecken {
 		log.Info("Starting Klangbecken")
@@ -104,16 +104,16 @@ func onChange(klangbecken bool) {
 		log.Info("Stopping Klangbecken")
 	}
 	if socketActive {
-		socket := connectSocket(socketPath)
+		socket := connectSocket(log, socketPath)
 		reader := bufio.NewReader(socket)
 
-		writeSock(socket, fmt.Sprintf(socketPattern, onair))
+		writeSock(log, socket, fmt.Sprintf(socketPattern, onair))
 		buffer, _, err := reader.ReadLine()
 		if err != nil {
 			log.Error(err)
 		}
 		log.Infof("Response from Liquidsoap '%s'", buffer)
-		writeSock(socket, "quit\n")
+		writeSock(log, socket, "quit\n")
 		buffer, _, err = reader.ReadLine()
 		if err != nil {
 			log.Error(err)
@@ -123,7 +123,7 @@ func onChange(klangbecken bool) {
 	}
 }
 
-func waitAndRead(pathfinder net.Conn, target *net.UDPConn) {
+func waitAndRead(log *zap.SugaredLogger, pathfinder net.Conn, target *net.UDPConn) {
 	log.Info("Waiting for Pathfinder data.")
 
 	reader := bufio.NewReader(pathfinder)
@@ -134,7 +134,7 @@ func waitAndRead(pathfinder net.Conn, target *net.UDPConn) {
 		log.Debug("Reading from Pathfinder.")
 		buffer, _, err := reader.ReadLine()
 		if err != nil {
-			log.WithError(err).Fatal("Failed to read from Pathfinder.")
+			log.Fatal("Failed to read from Pathfinder.")
 		}
 		trimmedData := trimmedStringFromBuffer(buffer)
 
@@ -148,7 +148,7 @@ func waitAndRead(pathfinder net.Conn, target *net.UDPConn) {
 			continue
 		}
 		atomic.StoreInt32(&targetMessage, target)
-		onChange(onChangeVal)
+		onChange(log, onChangeVal)
 
 		log.Infof("Target message is now '%d'", atomic.LoadInt32(&targetMessage))
 	}
@@ -177,7 +177,7 @@ func checkTrimmedData(trimmedData string) (target int32, onChange bool, err erro
 }
 
 // Execute initializes virtual-sämbox and runs is business logic.
-func Execute(sendUDP bool, targetAddr string, pathfinderAddr string, pathfinderAuth string, device string, socket bool, socketPathOpt string, socketPatternOpt string) {
+func Execute(log *zap.SugaredLogger, sendUDP bool, targetAddr string, pathfinderAddr string, pathfinderAuth string, device string, socket bool, socketPathOpt string, socketPatternOpt string) {
 
 	socketActive = socket
 	socketPath = socketPathOpt
@@ -186,23 +186,23 @@ func Execute(sendUDP bool, targetAddr string, pathfinderAddr string, pathfinderA
 	var target *net.UDPConn
 	if sendUDP {
 		log.Info("Connecting UDP...")
-		target = connectUDP(targetAddr)
+		target = connectUDP(log, targetAddr)
 		log.Infof("Connected to target %s", targetAddr)
 		defer target.Close()
 	}
-	pathfinder := connectTCP(pathfinderAddr)
+	pathfinder := connectTCP(log, pathfinderAddr)
 	log.Infof("Connected to pathfinder %s", pathfinderAddr)
 
-	go waitAndRead(pathfinder, target)
+	go waitAndRead(log, pathfinder, target)
 
-	writeTCP(pathfinder, fmt.Sprintf("LOGIN %s", pathfinderAuth))
-	writeTCP(pathfinder, fmt.Sprintf("SUB %s", device))
-	writeTCP(pathfinder, fmt.Sprintf("GET %s", device))
+	writeTCP(log, pathfinder, fmt.Sprintf("LOGIN %s", pathfinderAuth))
+	writeTCP(log, pathfinder, fmt.Sprintf("SUB %s", device))
+	writeTCP(log, pathfinder, fmt.Sprintf("GET %s", device))
 
 	for {
 		if sendUDP {
 			if atomic.LoadInt32(&targetMessage) != 0 {
-				writeUDP(target, fmt.Sprintf("%d\r\n", atomic.LoadInt32(&targetMessage)))
+				writeUDP(log, target, fmt.Sprintf("%d\r\n", atomic.LoadInt32(&targetMessage)))
 			}
 		}
 		time.Sleep(600 * time.Millisecond)
