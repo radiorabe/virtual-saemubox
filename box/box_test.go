@@ -91,3 +91,29 @@ func Test_checkTrimmedData(t *testing.T) {
 		})
 	}
 }
+
+func Test_trimmedStringFromBuffer(t *testing.T) {
+	type args struct {
+		buffer string
+	}
+	tests := []struct {
+		name string
+		args args
+		want string
+	}{
+		{
+			name: "trims ending from buffer",
+			args: args{
+				buffer: "test\x00\r\n",
+			},
+			want: "test",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := trimmedStringFromBuffer([]byte(tt.args.buffer)); got != tt.want {
+				t.Errorf("trimmedStringFromBuffer() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}

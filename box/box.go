@@ -136,7 +136,7 @@ func waitAndRead(pathfinder net.Conn, target *net.UDPConn) {
 		if err != nil {
 			log.WithError(err).Fatal("Failed to read from Pathfinder.")
 		}
-		trimmedData := strings.TrimRight(string(buffer), "\x00\r\n")
+		trimmedData := trimmedStringFromBuffer(buffer)
 
 		log.Infof("Received data '%s'", trimmedData)
 
@@ -152,6 +152,10 @@ func waitAndRead(pathfinder net.Conn, target *net.UDPConn) {
 
 		log.Infof("Target message is now '%d'", atomic.LoadInt32(&targetMessage))
 	}
+}
+
+func trimmedStringFromBuffer(buffer []byte) string {
+	return strings.TrimRight(string(buffer), "\x00\r\n")
 }
 
 func checkTrimmedData(trimmedData string) (target int32, onChange bool, err error) {
