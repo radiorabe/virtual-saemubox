@@ -57,7 +57,7 @@ refactor legacy apps at a later point.`,
 		defer func() {
 			err := logger.Sync() // flushes buffer, if any
 			if err != nil {
-				log.Fatal("Failed to sync logs.")
+				log.Panic("Failed to sync logs.")
 			}
 		}()
 

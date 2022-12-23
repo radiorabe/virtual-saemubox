@@ -34,7 +34,7 @@ var (
 	socketActive  bool
 	socketPath    string
 	socketPattern string
-	targetMessage int32
+	targetMessage atomic.Int32
 )
 
 func connectUDP(log *zap.SugaredLogger, addr string) *net.UDPConn {
@@ -147,10 +147,10 @@ func waitAndRead(log *zap.SugaredLogger, pathfinder net.Conn, target *net.UDPCon
 		if target == 0 {
 			continue
 		}
-		atomic.StoreInt32(&targetMessage, target)
+		targetMessage.Store(target)
 		onChange(log, onChangeVal)
 
-		log.Infof("Target message is now '%d'", atomic.LoadInt32(&targetMessage))
+		log.Infof("Target message is now '%d'", targetMessage.Load())
 	}
 }
 
@@ -201,8 +201,8 @@ func Execute(log *zap.SugaredLogger, sendUDP bool, targetAddr string, pathfinder
 
 	for {
 		if sendUDP {
-			if atomic.LoadInt32(&targetMessage) != 0 {
-				writeUDP(log, target, fmt.Sprintf("%d\r\n", atomic.LoadInt32(&targetMessage)))
+			if targetMessage.Load() != 0 {
+				writeUDP(log, target, fmt.Sprintf("%d\r\n", targetMessage.Load()))
 			}
 		}
 		time.Sleep(600 * time.Millisecond)
