@@ -18,12 +18,13 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/spf13/cobra"
+	"log"
 	"os"
 
 	homedir "github.com/mitchellh/go-homedir"
-	log "github.com/sirupsen/logrus"
+	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	"go.uber.org/zap"
 
 	"github.com/radiorabe/virtual-saemubox/box"
 )
@@ -49,10 +50,19 @@ legacy UDP telnet format that quite a few of our legacy apps still expect.
 It is a stop-gap measure that helps us migrate to Pathfinder ASAP enabling us to
 refactor legacy apps at a later point.`,
 	Run: func(cmd *cobra.Command, args []string) {
+		logger, _ := zap.NewProduction()
 		if debug {
-			log.SetLevel(log.DebugLevel)
+			logger, _ = zap.NewDevelopment()
 		}
-		box.Execute(sendUDP, target, pathfinder, pathfinderAuth, device, socket, socketPath, socketPattern)
+		defer func() {
+			err := logger.Sync() // flushes buffer, if any
+			if err != nil {
+				log.Fatal("Failed to sync logs.")
+			}
+		}()
+
+		sugar := logger.Sugar()
+		box.Execute(sugar, sendUDP, target, pathfinder, pathfinderAuth, device, socket, socketPath, socketPattern)
 	},
 }
 
