@@ -1,25 +1,13 @@
-
 name: Run semantic-release
 
 on:
   push:
     branches:
-      - master
       - main
+      - release/*
 
 jobs:
   semantic-release:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Unshallow Clone
-        run: git fetch --prune --unshallow
-
-      - name: Run go-semantic-release
-        id: semrel
-        uses: go-semantic-release/action@v1.21
-        with:
-          github-token: ${{ secrets.GH_PAT_TOKEN }}
-          allow-initial-deployment-versions: true
+    uses: radiorabe/actions/.github/workflows/semantic-release.yaml@v0.20.6
+    secrets:
+      RABE_ITREAKTION_GITHUB_TOKEN: ${{ secrets.RABE_ITREAKTION_GITHUB_TOKEN }}
